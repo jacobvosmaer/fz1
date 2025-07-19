@@ -1,23 +1,8 @@
 /* fzformat: create empty Casio FZ-1 disk image */
 
-#include <stdarg.h>
+#include "fail.h"
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-
-#if __clang__ || __GNUC__
-void fail(char *fmt, ...) __attribute__((format(printf, 1, 2)));
-#endif
-
-void fail(char *fmt, ...) {
-  va_list ap;
-  fputs("fzformat: error: ", stderr);
-  va_start(ap, fmt);
-  vfprintf(stderr, fmt, ap);
-  va_end(ap);
-  fputc('\n', stderr);
-  exit(1);
-}
 
 unsigned char sector[1024];
 #define NAMESIZE 12
