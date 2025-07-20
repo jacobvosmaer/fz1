@@ -1,0 +1,18 @@
+#!/bin/sh
+set -e
+if [ $# != 3 ]
+then
+  echo 'Usage: splice SAMPLE IMAGE SECTOR' 1>&2
+  exit 1
+fi
+sample=$1
+image=$2
+sector=$3
+dd if=$image bs=1024 count=$sector
+for i in $(seq 10)
+do
+  cat $sample
+done
+dd if=$sample bs=16 count=1
+dd if=$sample bs=16 skip=9
+dd if=$image bs=1024 skip=$(($sector+4))

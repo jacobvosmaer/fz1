@@ -1,3 +1,5 @@
 fzformat
 *.img
 *.o
+*.wav
+*.raw

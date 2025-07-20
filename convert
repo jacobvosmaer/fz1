@@ -1,0 +1,7 @@
+#!/bin/sh
+set -e
+if [ $# != 2 ]
+then
+  echo 'Usage: convert AKWF_IN OUT
+fi
+sox "$1" "$1" "$1" -t s16 -c 1 -L "$2" rate -v 14112 gain -6 trim 192s 192s
