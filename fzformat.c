@@ -41,4 +41,5 @@ int main(int argc, char **argv) {
   for (i = 2; i < 1280; i++)
     if (!fwrite(sector, sizeof(sector), 1, stdout))
       fail("fwrite sector %d", i);
+  return 0;
 }
