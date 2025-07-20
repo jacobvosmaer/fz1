@@ -3,3 +3,4 @@ fzformat
 *.o
 *.wav
 *.raw
+*.fzv
