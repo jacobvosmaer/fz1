@@ -7,4 +7,8 @@ void fail(char *fmt, ...) __attribute__((format(printf, 1, 2)));
 void fail(char *fmt, ...);
 #endif
 
+#define assert(x)                                                              \
+  if (!(x))                                                                    \
+  __builtin_trap()
+
 #endif
