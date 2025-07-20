@@ -4,3 +4,4 @@ fzformat
 *.wav
 *.raw
 *.fzv
+fzputfile
