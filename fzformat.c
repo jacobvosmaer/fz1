@@ -4,13 +4,15 @@
 #include <stdio.h>
 #include <string.h>
 
+char *PROGNAME = "fzformat";
+
 unsigned char sector[1024];
 #define NAMESIZE 12
 
 int main(int argc, char **argv) {
   int i, n;
   if (argc != 2) {
-    fputs("Usage: fzformat LABEL\n", stderr);
+    fprintf(stderr, "Usage: %s LABEL\n", PROGNAME);
     return 1;
   }
 

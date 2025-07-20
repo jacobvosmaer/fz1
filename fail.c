@@ -6,7 +6,7 @@
 
 void fail(char *fmt, ...) {
   va_list ap;
-  fputs("fzformat: error: ", stderr);
+  fprintf(stderr, "%s: error: ", PROGNAME);
   va_start(ap, fmt);
   vfprintf(stderr, fmt, ap);
   va_end(ap);

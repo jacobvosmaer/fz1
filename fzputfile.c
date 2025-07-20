@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+char *PROGNAME = "fzputfile";
+
 #define NSECTOR 1280
 #define SECTORSIZE 1024
 uint8_t disk[NSECTOR * SECTORSIZE], *CAT = disk + 128, *dir = disk + SECTORSIZE,
@@ -51,7 +53,7 @@ int main(int argc, char **argv) {
   uint8_t *direntry, *filehead, *dbp, buf[SECTORSIZE];
   int filetype, sector, n, filefirst = 0;
   if (argc != 4) {
-    fputs("Usage: fzputfile IMAGE TYPE FILE\n", stderr);
+    fprintf(stderr, "Usage: %s IMAGE TYPE FILE\n", PROGNAME);
     return 1;
   }
   if (img = fopen(argv[1], "rb+"), !img)

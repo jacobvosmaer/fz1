@@ -11,4 +11,6 @@ void fail(char *fmt, ...);
   if (!(x))                                                                    \
   __builtin_trap()
 
+extern char *PROGNAME;
+
 #endif
