@@ -1,6 +1,9 @@
 #!/bin/sh 
 set -e
 
+# This script converts a mono AdventureKid Waveform file (600 samples
+# long) into an FZ-1 "wave synth" preset.
+
 defaultvoice() {
   printf '\000\000\000\000\210\007\000\000\140\000\000\000\200\007\000\000'
   printf '\023\000\000\000\000\000\000\000\200\007\000\000\200\007\000\000'
