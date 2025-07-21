@@ -89,6 +89,8 @@ int main(int argc, char **argv) {
     if (!filefirst)
       filefirst = sector;
   }
+  if (ferror(file))
+    fail("file read error");
   switch (filetype) {
   case 1:
     memmove(direntry, sectoraddr(filefirst) + 178, 12);
