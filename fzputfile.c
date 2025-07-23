@@ -51,7 +51,7 @@ int newsector(void) {
 int main(int argc, char **argv) {
   FILE *img, *file;
   uint8_t *direntry, *filehead, *dbp, buf[SECTORSIZE];
-  int filetype, sector, n, filefirst, filesectors;
+  int filetype, sector, n, filefirst, filesectors, nbank, nvoice, nwave;
   if (argc != 4) {
     fprintf(stderr, "Usage: %s IMAGE TYPE FILE\n", PROGNAME);
     return 1;
@@ -77,6 +77,9 @@ int main(int argc, char **argv) {
   putint(sector, 16, dbp);
   filefirst = 0;
   filesectors = 0;
+  nbank = 0;
+  nvoice = 0;
+  nwave = 0;
   while (n = fread(buf, 1, sizeof(buf), file), n > 0) {
     int nextsector = newsector();
     if (nextsector != sector + 1) {
@@ -100,15 +103,17 @@ int main(int argc, char **argv) {
     break;
   case 1:
     memmove(direntry, sectoraddr(filefirst) + 178, 12);
-    putint(0, 16, filehead + 1018); /* 0 banks */
-    putint(1, 16, filehead + 1020); /* 1 voice */
-    putint(filesectors - 1, 16,
-           filehead + 1022); /* filesectors-1 PCM data sectors */
+    nbank = 0;
+    nvoice = 1;
+    nwave = filesectors - 1;
     break;
   default:
     fail("unknown filetype: %d", filetype);
     break;
   }
+  putint(nbank, 16, filehead + 1018);
+  putint(nvoice, 16, filehead + 1020);
+  putint(nwave, 16, filehead + 1022);
   if (fseek(img, 0, SEEK_SET))
     fail("fseek image failed");
   if (!fwrite(disk, sizeof(disk), 1, img))
