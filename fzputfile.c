@@ -48,10 +48,19 @@ int newsector(void) {
   return sector;
 }
 
+int isname(uint8_t *p) {
+  int i;
+  for (i = 0; i < 12; i++)
+    if (p[i] < 0x20 || p[i] > 0x7e)
+      return 0;
+  return 1;
+}
+
 int main(int argc, char **argv) {
   FILE *img, *file;
   uint8_t *direntry, *filehead, *dbp, buf[SECTORSIZE];
-  int filetype, sector, n, filefirst, filesectors, nbank, nvoice, nwave;
+  int filetype, sector, n, filesectors = 0, nbank = 0, nvoice = 0;
+  char *filename = 0;
   if (argc != 4) {
     fprintf(stderr, "Usage: %s IMAGE TYPE FILE\n", PROGNAME);
     return 1;
@@ -75,12 +84,8 @@ int main(int argc, char **argv) {
   memset(filehead, 0, SECTORSIZE);
   dbp = filehead;
   putint(sector, 16, dbp);
-  filefirst = 0;
-  filesectors = 0;
-  nbank = 0;
-  nvoice = 0;
-  nwave = 0;
   while (n = fread(buf, 1, sizeof(buf), file), n > 0) {
+    uint8_t *p;
     int nextsector = newsector();
     if (nextsector != sector + 1) {
       if (dbp - filehead == 256)
@@ -90,30 +95,43 @@ int main(int argc, char **argv) {
     }
     sector = nextsector;
     putint(sector, 16, dbp + 2);
-    memmove(sectoraddr(sector), buf, n);
-    if (!filefirst)
-      filefirst = sector;
+    p = sectoraddr(sector);
+    memmove(p, buf, n);
+    switch (filetype) {
+    case 0:
+      if (filesectors < 8 && nbank < 8 && !nvoice && isname(p + 0x282)) {
+        nbank++;
+      } else if (filesectors < 24 && !(nvoice % 4) && nvoice < 60) {
+        int i;
+        for (i = 0; i < 4 && isname(p + i * 256 + 0xb2); i++)
+          nvoice++;
+      }
+      break;
+    case 1:
+      if (!filename)
+        filename = (char *)p + 178;
+      break;
+    }
     filesectors++;
   }
   if (ferror(file))
     fail("file read error");
   switch (filetype) {
   case 0:
-    memmove(direntry, "FULL-DATA-FZ", 12);
+    filename = "FULL-DATA-FZ";
     break;
   case 1:
-    memmove(direntry, sectoraddr(filefirst) + 178, 12);
     nbank = 0;
     nvoice = 1;
-    nwave = filesectors - 1;
-    break;
-  default:
-    fail("unknown filetype: %d", filetype);
     break;
   }
+  assert(filename);
+  memmove(direntry, filename, 12);
+  assert(nbank >= 0 && nbank <= 8);
   putint(nbank, 16, filehead + 1018);
+  assert(nvoice >= 0 && nvoice <= 64);
   putint(nvoice, 16, filehead + 1020);
-  putint(nwave, 16, filehead + 1022);
+  putint(filesectors - nbank - nvoice, 16, filehead + 1022);
   if (fseek(img, 0, SEEK_SET))
     fail("fseek image failed");
   if (!fwrite(disk, sizeof(disk), 1, img))
