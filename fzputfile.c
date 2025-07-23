@@ -20,21 +20,6 @@ int putint(int x, int width, uint8_t *p) {
   return width / 8;
 }
 
-int getuint(uint8_t *p, int width) {
-  int x = 0, i;
-  assert(width > 0 && !(width % 8));
-  for (i = 0; i < width; i += 8)
-    x |= (int)*p++ << i;
-  return x;
-}
-
-int getint(uint8_t *p, int width) {
-  int x = getuint(p, width);
-  if (x >= (1 << (width - 1)))
-    x -= 1 << width;
-  return x;
-}
-
 uint8_t *sectoraddr(int sector) { return disk + sector * SECTORSIZE; }
 
 int newsector(void) {
