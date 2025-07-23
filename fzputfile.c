@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
   }
   if (img = fopen(argv[1], "rb+"), !img)
     fail("open failed: %s", argv[1]);
-  if (filetype = atoi(argv[2]), filetype != 1)
+  if (filetype = atoi(argv[2]), filetype < 0 || filetype > 1)
     fail("unsupported file type: %d", filetype);
   if (file = fopen(argv[3], "rb"), !file)
     fail("open failed: %s", argv[3]);
@@ -95,6 +95,9 @@ int main(int argc, char **argv) {
   if (ferror(file))
     fail("file read error");
   switch (filetype) {
+  case 0:
+    memmove(direntry, "FULL-DATA-FZ", 12);
+    break;
   case 1:
     memmove(direntry, sectoraddr(filefirst) + 178, 12);
     putint(0, 16, filehead + 1018); /* 0 banks */
