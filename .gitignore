@@ -5,3 +5,5 @@ fzformat
 *.raw
 *.fzv
 fzputfile
+*.dSYM/
+*.fzf
