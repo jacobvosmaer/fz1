@@ -1,3 +1,4 @@
+/* fzputfile: put a file onto a Casio FZ disk image */
 
 #include "fail.h"
 #include <stdint.h>
@@ -28,7 +29,7 @@ int newsector(void) {
        sector++)
     ;
   if (sector == NSECTOR)
-    fail("no space left in CAT");
+    fail("no space left on disk");
   CAT[sector / 8] |= 1 << (sector % 8);
   return sector;
 }
@@ -84,6 +85,10 @@ int main(int argc, char **argv) {
     memmove(p, buf, n);
     switch (filetype) {
     case 0:
+      filename = "FULL-DATA-FZ";
+      /* Annoyingly, FZF files as found on the internet are missing their
+       * bank/voice/wave layout bytes. We use heuristics to guess what they are.
+       */
       if (filesectors < 8 && nbank < 8 && !nvoice && isname(p + 0x282)) {
         nbank++;
       } else if (filesectors < 24 && !(nvoice % 4) && nvoice < 60) {
@@ -93,6 +98,8 @@ int main(int argc, char **argv) {
       }
       break;
     case 1:
+      nbank = 0;
+      nvoice = 1;
       if (!filename)
         filename = (char *)p + 178;
       break;
@@ -101,15 +108,6 @@ int main(int argc, char **argv) {
   }
   if (ferror(file))
     fail("file read error");
-  switch (filetype) {
-  case 0:
-    filename = "FULL-DATA-FZ";
-    break;
-  case 1:
-    nbank = 0;
-    nvoice = 1;
-    break;
-  }
   assert(filename);
   memmove(direntry, filename, 12);
   assert(nbank >= 0 && nbank <= 8);
