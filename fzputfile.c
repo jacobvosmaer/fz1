@@ -45,7 +45,7 @@ int isname(uint8_t *p) {
 int main(int argc, char **argv) {
   FILE *img, *file;
   uint8_t *direntry, *filehead, *dbp, buf[SECTORSIZE];
-  int filetype, sector, n, filesectors = 0, nbank = 0, nvoice = 0;
+  int filetype, sector, n, filesectors, nbank = 0, nvoice = 0;
   char *filename = 0;
   if (argc != 4) {
     fprintf(stderr, "Usage: %s IMAGE TYPE FILE\n", PROGNAME);
@@ -70,7 +70,8 @@ int main(int argc, char **argv) {
   memset(filehead, 0, SECTORSIZE);
   dbp = filehead;
   putint(sector, 16, dbp);
-  while (n = fread(buf, 1, sizeof(buf), file), n > 0) {
+  for (filesectors = 0; n = fread(buf, 1, sizeof(buf), file), n > 0;
+       filesectors++) {
     uint8_t *p;
     int nextsector = newsector();
     if (nextsector != sector + 1) {
@@ -104,7 +105,6 @@ int main(int argc, char **argv) {
         filename = (char *)p + 178;
       break;
     }
-    filesectors++;
   }
   if (ferror(file))
     fail("file read error");
