@@ -32,7 +32,7 @@ name="$3"
 tmp=$(mktemp)
 trap "rm -- \"$tmp\"" EXIT
 
-sox "$in" "$in" "$in" -t s16 -c 1 -L "$tmp" rate -v 14112 gain -6 trim 192s 192s
+sox "$in" "$in" "$in" -t s16 -c 1 -L "$tmp" gain -6 rate -v 14112 trim 192s 192s
 defaultvoice "$name" > "$out"
 cat "$tmp" "$tmp" "$tmp" "$tmp" "$tmp" "$tmp" "$tmp" "$tmp" "$tmp" "$tmp" >> "$out"
 dd if="$tmp" bs=16 count=1 >> "$out"
