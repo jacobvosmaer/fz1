@@ -49,6 +49,7 @@ int main(int argc, char **argv) {
   char *filename = 0;
   if (argc != 4) {
     fprintf(stderr, "Usage: %s IMAGE TYPE FILE\n", PROGNAME);
+    fputs("Supported file types: 0 (Full Dump Data), 1 (Voice Data)\n", stderr);
     return 1;
   }
   if (img = fopen(argv[1], "rb+"), !img)
