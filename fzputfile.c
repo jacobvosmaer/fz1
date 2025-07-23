@@ -51,7 +51,7 @@ int newsector(void) {
 int main(int argc, char **argv) {
   FILE *img, *file;
   uint8_t *direntry, *filehead, *dbp, buf[SECTORSIZE];
-  int filetype, sector, n, filefirst = 0;
+  int filetype, sector, n, filefirst, filesectors;
   if (argc != 4) {
     fprintf(stderr, "Usage: %s IMAGE TYPE FILE\n", PROGNAME);
     return 1;
@@ -75,6 +75,8 @@ int main(int argc, char **argv) {
   memset(filehead, 0, SECTORSIZE);
   dbp = filehead;
   putint(sector, 16, dbp);
+  filefirst = 0;
+  filesectors = 0;
   while (n = fread(buf, 1, sizeof(buf), file), n > 0) {
     int nextsector = newsector();
     if (nextsector != sector + 1) {
@@ -88,13 +90,17 @@ int main(int argc, char **argv) {
     memmove(sectoraddr(sector), buf, n);
     if (!filefirst)
       filefirst = sector;
+    filesectors++;
   }
   if (ferror(file))
     fail("file read error");
   switch (filetype) {
   case 1:
     memmove(direntry, sectoraddr(filefirst) + 178, 12);
-    /* TODO put wn in file head */
+    putint(0, 16, filehead + 1018); /* 0 banks */
+    putint(1, 16, filehead + 1020); /* 1 voice */
+    putint(filesectors - 1, 16,
+           filehead + 1022); /* filesectors-1 PCM data sectors */
     break;
   default:
     fail("unknown filetype: %d", filetype);
