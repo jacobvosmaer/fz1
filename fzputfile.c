@@ -94,7 +94,7 @@ int main(int argc, char **argv) {
       if (filesectors < 8 && nbank < 8 && !nvoice && !nwave &&
           isname(p + 0x282)) {
         nbank++;
-      } else if (filesectors < 24 && !nwave && !(nvoice % 4) && nvoice < 60 &&
+      } else if (filesectors < 24 && !nwave && !(nvoice % 4) && nvoice < 64 &&
                  isname(p + 0xb2)) {
         int i;
         for (i = 0; i < 4 && isname(p + i * 256 + 0xb2); i++)
