@@ -45,7 +45,7 @@ int isname(uint8_t *p) {
 int main(int argc, char **argv) {
   FILE *img, *file;
   uint8_t *direntry, *filehead, *dbp, buf[SECTORSIZE];
-  int filetype, sector, n, filesectors, nbank = 0, nvoice = 0;
+  int filetype, sector, n, filesectors, nbank = 0, nvoice = 0, nwave = 0;
   char *filename = 0;
   if (argc != 4) {
     fprintf(stderr, "Usage: %s IMAGE TYPE FILE\n", PROGNAME);
@@ -91,19 +91,25 @@ int main(int argc, char **argv) {
       /* Annoyingly, FZF files as found on the internet are missing their
        * bank/voice/wave layout bytes. We use heuristics to guess what they are.
        */
-      if (filesectors < 8 && nbank < 8 && !nvoice && isname(p + 0x282)) {
+      if (filesectors < 8 && nbank < 8 && !nvoice && !nwave &&
+          isname(p + 0x282)) {
         nbank++;
-      } else if (filesectors < 24 && !(nvoice % 4) && nvoice < 60) {
+      } else if (filesectors < 24 && !nwave && !(nvoice % 4) && nvoice < 60 &&
+                 isname(p + 0xb2)) {
         int i;
         for (i = 0; i < 4 && isname(p + i * 256 + 0xb2); i++)
           nvoice++;
+      } else {
+        nwave++;
       }
       break;
     case 1:
       nbank = 0;
       nvoice = 1;
-      if (!filename)
+      if (!filename) /* First sector of voice file */
         filename = (char *)p + 178;
+      else
+        nwave++;
       break;
     }
   }
@@ -115,7 +121,8 @@ int main(int argc, char **argv) {
   putint(nbank, 16, filehead + 1018);
   assert(nvoice >= 0 && nvoice <= 64);
   putint(nvoice, 16, filehead + 1020);
-  putint(filesectors - nbank - nvoice, 16, filehead + 1022);
+  assert(nwave >= 0 && nwave < NSECTOR);
+  putint(nwave, 16, filehead + 1022);
   if (fseek(img, 0, SEEK_SET))
     fail("fseek image failed");
   if (!fwrite(disk, sizeof(disk), 1, img))
