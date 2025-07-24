@@ -127,5 +127,7 @@ int main(int argc, char **argv) {
     fail("fseek image failed");
   if (!fwrite(disk, sizeof(disk), 1, img))
     fail("fwrite failed");
+  if (fclose(img))
+    fail("close image failed");
   return 0;
 }
