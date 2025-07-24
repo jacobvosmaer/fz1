@@ -62,6 +62,8 @@ int main(int argc, char **argv) {
       memmove(wavep, buf, sizeof(buf));
       wavep += sizeof(buf);
     }
+    if (ferror(f))
+      fail("error reading from %s", argv[1]);
     fclose(f);
   }
   if (fout = fopen(argv[1], "wb"), !fout)
