@@ -25,12 +25,15 @@ void putint(uint32_t x, uint8_t *p, int width) {
     x >>= 8;
   }
 }
-void fixsampleoffsets(uint8_t *buf, int offset) {
+void fixsampleoffsets(uint8_t *voice, int offset) {
   uint8_t *p;
   offset /= 2; /* convert byte offset to sample offset */
-  for (p = buf; p < buf + 0x10; p += 4) /* wavest, waved, genst, gened */
+  /* See CASIO DIGITAL SAMPLING KEYBOARD MODEL FZ-1 DATA STRUCTURES document for
+   * voice struct layout. We are fixing fields wavest, waved, genst, gened,
+   * loopst[MAXE] and looped[MAXE]. */
+  for (p = voice; p < voice + 0x10; p += 4)
     putint(getint(p, 32) + offset, p, 32);
-  for (p = buf + 0x14; p < buf + 0x54; p += 4) /* loopst[MAXE], looped[MAXE] */
+  for (p = voice + 0x14; p < voice + 0x54; p += 4)
     putint(getint(p, 32) + offset, p, 32);
 }
 int main(int argc, char **argv) {
