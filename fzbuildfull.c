@@ -4,21 +4,49 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-uint8_t fzf[2 * 1277 * 1024],
-    effectdefault[] = {0x18, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00,
-                       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x00,
-                       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+uint8_t fzf[2 * 1277 * 1024];
+/* default global settings for pitch bend range, MIDI channel etc. */
+uint8_t effectdefault[] = {0x18, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00,
+                           0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x00,
+                           0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 int fzfsize;
 char *PROGNAME = "fzbuildfull";
-void fixoffsets(uint8_t *buf, int offset) {}
-int main(int argc, char **argv) {
+uint32_t getint(uint8_t *p, int width) {
   int i;
+  uint32_t x = 0;
+  assert(width > 0 && width <= 32 && !(width % 8));
+  for (i = 0; i < width; i += 8)
+    x += *p++ << i;
+  return x;
+}
+void putint(uint32_t x, uint8_t *p, int width) {
+  assert(width > 0 && width <= 32 && !(width % 8));
+  for (; width; width -= 8) {
+    *p++ = x;
+    x >>= 8;
+  }
+}
+void fixoffsets(uint8_t *buf, int offset) {
+  uint8_t *p;
+  offset /= 2; /* convert byte offset to sample offset */
+  for (p = buf; p < buf + 0x10; p += 4) /* wavest, waved, genst, gened */
+    putint(getint(p, 32) + offset, p, 32);
+  for (p = buf + 0x14; p < buf + 0x54; p += 4) /* loopst[MAXE], looped[MAXE] */
+    putint(getint(p, 32) + offset, p, 32);
+}
+int main(int argc, char **argv) {
+  int i, nvoice = argc - 2, voicesectors = (nvoice + 3) / 4;
   FILE *fout;
-  uint8_t *voicep = fzf, *wavestart = fzf + 1024 * ((argc - 2 + 3) / 4),
-          *wavep = wavestart, buf[1024] = {0};
-  if (argc > 66)
-    fail("maximum number of voices is 64, got %d", argc - 2);
+  uint8_t *voicep = fzf, *wavestart = fzf + 1024 * voicesectors,
+          *wavep = wavestart;
+  if (argc < 3) {
+    fprintf(stderr, "Usage: %s FZF_FILE VOICE [VOICE...]\n", PROGNAME);
+    return 1;
+  }
+  if (nvoice > 64)
+    fail("maximum number of voices is 64, got %d", nvoice);
   for (i = 2; i < argc; i++) {
+    uint8_t buf[1024];
     FILE *f = fopen(argv[i], "rb");
     if (!f)
       fail("cannot open %s", argv[i]);
@@ -33,7 +61,7 @@ int main(int argc, char **argv) {
       if (wavep - fzf == sizeof(fzf))
         fail("output file too large");
       memmove(wavep, buf, sizeof(buf));
-      wavep += 1024;
+      wavep += sizeof(buf);
     }
     fclose(f);
   }
