@@ -11,10 +11,13 @@ unsigned char sector[1024];
 
 int main(int argc, char **argv) {
   int i;
-  if (argc != 2) {
-    fprintf(stderr, "Usage: %s LABEL\n", PROGNAME);
+  FILE *f;
+  if (argc != 3) {
+    fprintf(stderr, "Usage: %s LABEL IMAGE\n", PROGNAME);
     return 1;
   }
+  if (f = fopen(argv[2], "wb"), !f)
+    fail("failed to opeb %s", argv[2]);
 
   memset(sector, 0, sizeof(sector));
   snprintf((char *)sector, 12, "%-12.12s", argv[1]);
@@ -26,16 +29,19 @@ int main(int argc, char **argv) {
              0x120); /* Cluster Allocation Table has 6144 entries but the
                         physical disk has only 1280 clusters. So the last 4864
                         clusters are marked as allocated. */
-  if (!fwrite(sector, sizeof(sector), 1, stdout))
+  if (!fwrite(sector, sizeof(sector), 1, f))
     fail("fwrite sector 0");
 
   memset(sector, 0, sizeof(sector));
-  if (!fwrite(sector, sizeof(sector), 1, stdout))
+  if (!fwrite(sector, sizeof(sector), 1, f))
     fail("fwrite sector 1");
 
   memset(sector, 'Z', sizeof(sector));
   for (i = 2; i < 1280; i++)
-    if (!fwrite(sector, sizeof(sector), 1, stdout))
+    if (!fwrite(sector, sizeof(sector), 1, f))
       fail("fwrite sector %d", i);
+
+  if (fclose(f))
+    fail("failed to close %s", argv[1]);
   return 0;
 }
