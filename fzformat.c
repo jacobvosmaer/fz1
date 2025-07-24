@@ -10,22 +10,16 @@ unsigned char sector[1024];
 #define NAMESIZE 12
 
 int main(int argc, char **argv) {
-  int i, n;
+  int i;
   if (argc != 2) {
     fprintf(stderr, "Usage: %s LABEL\n", PROGNAME);
     return 1;
   }
 
-  n = strlen(argv[1]);
-  if (n > NAMESIZE)
-    fail("label name too long (max NAMESIZE): %d", n);
-
   memset(sector, 0, sizeof(sector));
-  memset(sector, ' ', NAMESIZE);
-  memmove(sector, argv[1], n);
+  snprintf((char *)sector, 12, "%-12.12s", argv[1]);
   sector[14] = 2;
-  memset(sector + 16, ' ', NAMESIZE);
-  memmove(sector + 16, argv[1], n);
+  snprintf((char *)sector + 16, 12, "%-12.12s", argv[1]);
   sector[128] = 3; /* First two clusters are allocated */
   memset(sector + 0x120, 0xff,
          sizeof(sector) -
