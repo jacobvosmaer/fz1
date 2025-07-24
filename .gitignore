@@ -7,3 +7,4 @@ fzformat
 fzputfile
 *.dSYM/
 *.fzf
+fzbuildfull
