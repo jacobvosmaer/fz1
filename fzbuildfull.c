@@ -25,7 +25,7 @@ void putint(uint32_t x, uint8_t *p, int width) {
     x >>= 8;
   }
 }
-void fixoffsets(uint8_t *buf, int offset) {
+void fixsampleoffsets(uint8_t *buf, int offset) {
   uint8_t *p;
   offset /= 2; /* convert byte offset to sample offset */
   for (p = buf; p < buf + 0x10; p += 4) /* wavest, waved, genst, gened */
@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
     memmove(voicep, buf, 192);
     if (i == 2)
       memmove(voicep + 960, effectdefault, sizeof(effectdefault));
-    fixoffsets(voicep, wavep - wavestart);
+    fixsampleoffsets(voicep, wavep - wavestart);
     voicep += 256;
     while (fread(buf, sizeof(buf), 1, f)) {
       if (wavep - fzf == sizeof(fzf))
