@@ -20,9 +20,10 @@ int main(int argc, char **argv) {
     fail("failed to opeb %s", argv[2]);
 
   memset(sector, 0, sizeof(sector));
-  snprintf((char *)sector, 12, "%-12.12s", argv[1]);
+  /* Trailing zero of snprintf is OK */
+  snprintf((char *)sector, 13, "%-12.12s", argv[1]);
   sector[14] = 2;
-  snprintf((char *)sector + 16, 12, "%-12.12s", argv[1]);
+  snprintf((char *)sector + 16, 13, "%-12.12s", argv[1]);
   sector[128] = 3; /* First two clusters are allocated */
   memset(sector + 0x120, 0xff,
          sizeof(sector) -
