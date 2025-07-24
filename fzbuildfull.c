@@ -1,5 +1,5 @@
-/* fzbuildfull: build a Casio FZ-1 "Full Data Dump" from invidual bank and voice
- * files. */
+/* fzbuildfull: build a Casio FZ-1 "Full Data Dump" from invidual voice files.
+ */
 #include "fail.h"
 #include <stdint.h>
 #include <stdio.h>
