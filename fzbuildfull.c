@@ -55,8 +55,8 @@ int main(int argc, char **argv) {
       fail("cannot open %s", argv[i]);
     if (!fread(buf, sizeof(buf), 1, f))
       fail("short read on first block of voice in %s", argv[i]);
+    fixsampleoffsets(buf, wavep - wavestart);
     memmove(voicep, buf, 192);
-    fixsampleoffsets(voicep, wavep - wavestart);
     voicep += 256;
     while (fread(buf, sizeof(buf), 1, f)) {
       if (wavep - fzf == sizeof(fzf))
