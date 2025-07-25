@@ -1,18 +1,14 @@
 /* fzputfile: put a file onto a Casio FZ disk image */
-
 #include "fail.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 char *PROGNAME = "fzputfile";
-
 #define NSECTOR 1280
 #define SECTORSIZE 1024
 uint8_t disk[NSECTOR * SECTORSIZE], *CAT = disk + 128, *dir = disk + SECTORSIZE,
                                     *dirend = disk + 2 * SECTORSIZE;
-
 int putint(int x, int width, uint8_t *p) {
   int i;
   assert(width > 0 && !(width % 8));
@@ -20,9 +16,7 @@ int putint(int x, int width, uint8_t *p) {
     *p++ = (x >> i);
   return width / 8;
 }
-
 uint8_t *sectoraddr(int sector) { return disk + sector * SECTORSIZE; }
-
 int newsector(void) {
   int sector;
   for (sector = 2; CAT[sector / 8] & (1 << (sector % 8)) && sector < NSECTOR;
@@ -33,7 +27,6 @@ int newsector(void) {
   CAT[sector / 8] |= 1 << (sector % 8);
   return sector;
 }
-
 int isname(uint8_t *p) {
   int i;
   for (i = 0; i < 12; i++)
@@ -41,7 +34,6 @@ int isname(uint8_t *p) {
       return 0;
   return 1;
 }
-
 int main(int argc, char **argv) {
   FILE *img, *file;
   uint8_t *direntry, *filehead, *dbp, buf[SECTORSIZE];
