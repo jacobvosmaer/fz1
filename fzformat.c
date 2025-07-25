@@ -1,14 +1,9 @@
 /* fzformat: create empty Casio FZ-1 disk image */
-
 #include "fail.h"
 #include <stdio.h>
 #include <string.h>
-
 char *PROGNAME = "fzformat";
-
 unsigned char sector[1024];
-#define NAMESIZE 12
-
 int main(int argc, char **argv) {
   int i;
   FILE *f;
@@ -18,7 +13,6 @@ int main(int argc, char **argv) {
   }
   if (f = fopen(argv[2], "wb"), !f)
     fail("failed to opeb %s", argv[2]);
-
   memset(sector, 0, sizeof(sector));
   /* Trailing zero of snprintf is OK */
   snprintf((char *)sector, 13, "%-12.12s", argv[1]);
@@ -32,16 +26,13 @@ int main(int argc, char **argv) {
                         clusters are marked as allocated. */
   if (!fwrite(sector, sizeof(sector), 1, f))
     fail("fwrite sector 0");
-
   memset(sector, 0, sizeof(sector));
   if (!fwrite(sector, sizeof(sector), 1, f))
     fail("fwrite sector 1");
-
   memset(sector, 'Z', sizeof(sector));
   for (i = 2; i < 1280; i++)
     if (!fwrite(sector, sizeof(sector), 1, f))
       fail("fwrite sector %d", i);
-
   if (fclose(f))
     fail("failed to close %s", argv[1]);
   return 0;
