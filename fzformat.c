@@ -19,11 +19,9 @@ int main(int argc, char **argv) {
   sector[14] = 2;
   snprintf((char *)sector + 16, 13, "%-12.12s", argv[1]);
   sector[128] = 3; /* First two clusters are allocated */
-  memset(sector + 0x120, 0xff,
-         sizeof(sector) -
-             0x120); /* Cluster Allocation Table has 6144 entries but the
-                        physical disk has only 1280 clusters. So the last 4864
-                        clusters are marked as allocated. */
+  /* The Cluster Allocation Table has 6144 entries but the physical disk has
+   * only 1280 clusters. So the last 4864 clusters are marked as allocated. */
+  memset(sector + 0x120, 0xff, sizeof(sector) - 0x120);
   if (!fwrite(sector, sizeof(sector), 1, f))
     fail("fwrite sector 0");
   memset(sector, 0, sizeof(sector));
