@@ -47,6 +47,7 @@ int main(int argc, char **argv) {
   }
   if (nvoice > 64)
     fail("maximum number of voices is 64, got %d", nvoice);
+  memmove(fzf + 960, effectdefault, sizeof(effectdefault));
   for (i = 2; i < argc; i++) {
     uint8_t buf[1024];
     FILE *f = fopen(argv[i], "rb");
@@ -55,8 +56,6 @@ int main(int argc, char **argv) {
     if (!fread(buf, sizeof(buf), 1, f))
       fail("short read on first block of voice in %s", argv[i]);
     memmove(voicep, buf, 192);
-    if (i == 2)
-      memmove(voicep + 960, effectdefault, sizeof(effectdefault));
     fixsampleoffsets(voicep, wavep - wavestart);
     voicep += 256;
     while (fread(buf, sizeof(buf), 1, f)) {
