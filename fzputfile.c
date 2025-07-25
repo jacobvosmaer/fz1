@@ -104,7 +104,7 @@ int main(int argc, char **argv) {
       nbank = 0;
       nvoice = 1;
       if (!filename) /* First sector of voice file */
-        filename = (char *)p + 178;
+        filename = (char *)p + 0xb2;
       else
         nwave++;
       break;
