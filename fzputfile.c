@@ -36,8 +36,8 @@ int isname(uint8_t *p) {
 }
 int main(int argc, char **argv) {
   FILE *img, *file;
-  uint8_t *direntry, *filehead, *dbp, buf[SECTORSIZE];
-  int filetype, sector, n, nbank = 0, nvoice = 0, nwave = 0;
+  uint8_t *direntry, *filehead, *dbp, buf[SECTORSIZE] = {0};
+  int filetype, sector, nbank = 0, nvoice = 0, nwave = 0;
   char *filename = 0;
   if (argc != 4) {
     fprintf(stderr, "Usage: %s IMAGE TYPE FILE\n", PROGNAME);
@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
   memset(filehead, 0, SECTORSIZE);
   dbp = filehead;
   putint(sector, 16, dbp);
-  while (n = fread(buf, 1, sizeof(buf), file), n > 0) {
+  while (fread(buf, 1, sizeof(buf), file)) {
     uint8_t *p;
     int nextsector = newsector();
     if (nextsector != sector + 1) {
@@ -75,7 +75,7 @@ int main(int argc, char **argv) {
     sector = nextsector;
     putint(sector, 16, dbp + 2);
     p = sectoraddr(sector);
-    memmove(p, buf, n);
+    memmove(p, buf, sizeof(buf));
     switch (filetype) {
     case 0:
       filename = "FULL-DATA-FZ";
