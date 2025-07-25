@@ -19,11 +19,10 @@ uint32_t getint(uint8_t *p, int width) {
   return x;
 }
 void putint(uint32_t x, uint8_t *p, int width) {
+  int i;
   assert(width > 0 && width <= 32 && !(width % 8));
-  for (; width; width -= 8) {
-    *p++ = x;
-    x >>= 8;
-  }
+  for (i = 0; i < width; i += 8)
+    *p++ = x >> i;
 }
 void fixsampleoffsets(uint8_t *voice, int offset) {
   uint8_t *p;
