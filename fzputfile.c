@@ -45,7 +45,7 @@ int isname(uint8_t *p) {
 int main(int argc, char **argv) {
   FILE *img, *file;
   uint8_t *direntry, *filehead, *dbp, buf[SECTORSIZE];
-  int filetype, sector, n, filesectors, nbank = 0, nvoice = 0, nwave = 0;
+  int filetype, sector, n, nbank = 0, nvoice = 0, nwave = 0;
   char *filename = 0;
   if (argc != 4) {
     fprintf(stderr, "Usage: %s IMAGE TYPE FILE\n", PROGNAME);
@@ -71,8 +71,7 @@ int main(int argc, char **argv) {
   memset(filehead, 0, SECTORSIZE);
   dbp = filehead;
   putint(sector, 16, dbp);
-  for (filesectors = 0; n = fread(buf, 1, sizeof(buf), file), n > 0;
-       filesectors++) {
+  while (n = fread(buf, 1, sizeof(buf), file), n > 0) {
     uint8_t *p;
     int nextsector = newsector();
     if (nextsector != sector + 1) {
@@ -91,11 +90,9 @@ int main(int argc, char **argv) {
       /* Annoyingly, FZF files as found on the internet are missing their
        * bank/voice/wave layout bytes. We use heuristics to guess what they are.
        */
-      if (filesectors < 8 && nbank < 8 && !nvoice && !nwave &&
-          isname(p + 0x282)) {
+      if (!nvoice && !nwave && nbank < 8 && isname(p + 0x282)) {
         nbank++;
-      } else if (filesectors < 24 && !nwave && !(nvoice % 4) && nvoice < 64 &&
-                 isname(p + 0xb2)) {
+      } else if (!nwave && nvoice < 64 && !(nvoice % 4) && isname(p + 0xb2)) {
         int i;
         for (i = 0; i < 4 && isname(p + i * 256 + 0xb2); i++)
           nvoice++;
