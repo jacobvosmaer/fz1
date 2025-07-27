@@ -17,7 +17,7 @@ defaultvoice() {
   printf '\300\300\300\300\377\000\000\000\000\000\000\000\000\000\200\000'
   printf '\100\000\000\000\000\000\000\000\000\000\000\000\000\000\140\044'
   printf '\110\000%-12.12s\000\000' "$1"
-  dd if=/dev/zero bs=832 count=1
+  dd if=/dev/zero bs=832 count=1 status=none
 }
 
 if [ $# != 3 ]
@@ -35,5 +35,5 @@ trap "rm -- \"$tmp\"" EXIT
 sox "$in" "$in" "$in" -t s16 -c 1 -L "$tmp" gain -6 rate -v 14112 trim 192s 192s
 defaultvoice "$name" > "$out"
 cat "$tmp" "$tmp" "$tmp" "$tmp" "$tmp" "$tmp" "$tmp" "$tmp" "$tmp" "$tmp" >> "$out"
-dd if="$tmp" bs=16 count=1 >> "$out"
-dd if="$tmp" bs=16 skip=9 >> "$out"
+dd if="$tmp" bs=16 count=1 status=none >> "$out"
+dd if="$tmp" bs=16 skip=9 status=none >> "$out"
