@@ -38,15 +38,28 @@ void fixsampleoffsets(uint8_t *voice, int offset) {
 int main(int argc, char **argv) {
   int i, nvoice = argc - 2, voicesectors = (nvoice + 3) / 4;
   FILE *fout;
-  uint8_t *voicep = fzf, *wavestart = fzf + 1024 * voicesectors,
-          *wavep = wavestart;
+  uint8_t *bank = fzf, *voicep = bank + 1024,
+          *wavestart = voicep + 1024 * voicesectors, *wavep = wavestart;
   if (argc < 3) {
     fprintf(stderr, "Usage: %s FZF_FILE VOICE [VOICE...]\n", PROGNAME);
     return 1;
   }
   if (nvoice > 64)
     fail("maximum number of voices is 64, got %d", nvoice);
-  memmove(fzf + 960, effectdefault, sizeof(effectdefault));
+  putint(nvoice, bank, 16);
+  for (i = 0; i < nvoice; i++) {
+    /* 0x24 is the MIDI note number of the lowest key on the FZ-1 keyboard */
+    bank[0x2 + i] = 0x24 + i;            /* key high */
+    bank[0x42 + i] = 0x24 + i;           /* key low */
+    bank[0x82 + i] = 0x7f;               /* velocity high */
+    bank[0xc2 + i] = 1;                  /* velocity low */
+    bank[0x102 + i] = 0x24 + i;          /* key center */
+    bank[0x104 + i] = 0;                 /* MIDI channel */
+    bank[0x182 + i] = 0xff;              /* audio outputs */
+    putint(i, bank + 0x202 + 2 * i, 16); /* voice number */
+  }
+  memmove(bank + 0x282, "All Voices  ", 12);
+  memmove(bank + 960, effectdefault, sizeof(effectdefault));
   for (i = 2; i < argc; i++) {
     uint8_t buf[1024];
     FILE *f = fopen(argv[i], "rb");
