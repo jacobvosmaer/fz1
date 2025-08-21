@@ -4,6 +4,7 @@
 - `fzformat`: creates an empty FZ-1 disk image
 - `fzputfile`: stores a given file onto an FZ-1 disk image file
 - `fzbuildfull`: assemble FZV voice files into an FZF full data dump
+- `wav2fzv`: convert a WAV file to an FZV
 
 Read more in this blog post: https://blog.jacobvosmaer.nl/0057-fz-1-images/ .
 
