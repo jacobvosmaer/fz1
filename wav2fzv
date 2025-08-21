@@ -20,23 +20,62 @@ if [ $? != 0 ]
 then
   fail 'wc failed'
 fi
-awk -v size="$size" '
+awk -v size="$size" -v name="${1%.*}" '
 END {
   samples = size/2
   Long(0) # wave start
   Long(samples) # wave end
   Long(0) # gen start
   Long(samples-8) # gen end
-  Int(0) # loop sus, loop end
-  Long(471) # normal sample playback
-  for(i=1;i<=16;i++) Long(samples-8) # loop start, loop end
+  Int(471) # normal sample playback
+  Short(0) # loop sus
+  Short(0) # loop end
+  for(i=1;i<=8;i++) Long(samples-8) # loop start
+  for(i=1;i<=8;i++) Long(samples-8) # loop end
   for(i=1;i<=8;i++) Int(0) # loop crossfade
   for(i=1;i<=8;i++) Int(100) # loop time
+  Int(0) # dcp
+  Short(0) # dcf
+  Short(0) # dcq
+  Short(0) # dca sustain
+  Short(7) # dca end
+  Short(127) # dca env rate
+  for(i=2;i<=8;i++) Short(192) # dca env rate
+  Short(255) # dca env stop
+  for(i=2;i<=8;i++) Short(0) # dca env stop
+  Short(0) # dcf sustain
+  Short(7) # dcf end
+  Short(127) # dcf env rate
+  for(i=2;i<=8;i++) Short(192) # dcf env rate
+  Short(255) # dcf env stop
+  for(i=2;i<=8;i++) Short(0) # dcf env stop
+  Int(0) # lfo delay
+  Short(128) # lfo wave
+  Short(0) # lfo attack
+  Short(64) # lfo rate
+  Short(0) # lfo dcp (vibrato amount)
+  Short(0) # lfo dca (tremolo amount)
+  Short(0) # lfo dcf (filter lfo amount)
+  Short(0) # lfo dcq (LFO TO RESONANCE??)
+  Short(0) # vel_dcq_kf  "initial touch dcq follow"
+  Short(0) # dca_kf "dca keyboard follow depth"
+  Short(0) # dca_rs "dca noterate scaling depth"
+  Short(0) # dcf_kf
+  Short(0) # dcf_rs
+  Short(0) # vel_dca_kf "initial touchamp key follow"
+  Short(0) # vel_dca_rs "initial touchamp rate scale"
+  Short(0) # vel_dcf_kf "initial touchdcf key follow"
+  Short(0) # vel_dcf_rs "initial touchdcf rate scale"
+  Short(96) # "high width MIDI code"
+  Short(36) # "low"
+  Short(72) # "keynote centor"
+  Short(0) # sampling frequency (0: 36k, 1: 18k, 2: 9k)
+  printf("%-12.12s%c%c", name, 0, 0)
+  for(i=1;i<=832;i++) printf("%c", 0)
 }
 function Long(x) {
   printf "%c%c%c%c", int(x), int(x/256), int(x/65536), int(x/16777216)
 }
-function Int(x) {
-  printf "%c%c", int(x), int(x/256)
-}
+function Int(x) { printf "%c%c", int(x), int(x/256) }
+function Short(x) { printf "%c", int(x) }
 ' /dev/null
