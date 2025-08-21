@@ -15,7 +15,7 @@ then
 fi
 trap "rm -f \"$tmp\"" exit
 sox -G "$1" -t s16 -L "$tmp" rate -v 36000 pad 0 8s
-size=$(ls -l "$tmp" | awk '{print $6}')
+size=$(wc -c "$tmp" | awk '{print $1}')
 if [ $? != 0 ]
 then
   fail 'wc failed'
@@ -79,3 +79,9 @@ function Long(x) {
 function Int(x) { printf "%c%c", int(x), int(x/256) }
 function Short(x) { printf "%c", int(x) }
 ' /dev/null
+cat "$tmp"
+pad=$((1024 - ($size % 1024)))
+if [ $pad -gt 0 ]
+then
+  dd if=/dev/zero bs=$pad count=1 status=none
+fi
