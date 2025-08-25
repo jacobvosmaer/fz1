@@ -8,3 +8,4 @@ fzputfile
 *.dSYM/
 *.fzf
 fzbuildfull
+fzlist
