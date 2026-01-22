@@ -11,6 +11,6 @@ fzbuildfull: fail.o
 fzlist: fail.o
 fail.o: fail.h
 install: all
-	install $(EXE) $(PREFIX)/bin/
+	install wav2fzv $(EXE) $(PREFIX)/bin/
 clean:
 	rm -f -- $(EXE) $(OBJS)
