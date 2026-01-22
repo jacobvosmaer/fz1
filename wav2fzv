@@ -1,25 +1,14 @@
 #!/bin/sh
 set -e
-fail() {
-  echo "$@" 1>&2
-  exit 1
-}
 if [ $# != 1 ]
 then
-  fail 'Usage: wav2fzv INFILE'
+  echo 'Usage: wav2fzv INFILE' 1>&2
+  exit 1
 fi
 tmp=$(mktemp)
-if [ $? != 0 ]
-then
-  fail 'mktemp failed'
-fi
 trap "rm -f \"$tmp\"" exit
 sox -G "$1" -t s16 -L "$tmp" rate -v 36000 pad 0 8s
 size=$(stat -f%z "$tmp")
-if [ $? != 0 ]
-then
-  fail 'stat failed'
-fi
 awk -v size="$size" -v name="${1%.*}" '
 END {
   samples = size/2
