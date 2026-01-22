@@ -15,10 +15,10 @@ then
 fi
 trap "rm -f \"$tmp\"" exit
 sox -G "$1" -t s16 -L "$tmp" rate -v 36000 pad 0 8s
-size=$(wc -c "$tmp" | awk '{print $1}')
+size=$(stat -f%z "$tmp")
 if [ $? != 0 ]
 then
-  fail 'wc failed'
+  fail 'stat failed'
 fi
 awk -v size="$size" -v name="${1%.*}" '
 END {
