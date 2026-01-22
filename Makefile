@@ -1,4 +1,4 @@
-CFLAGS += -Wall -pedantic -std=gnu89
+CFLAGS += -Wall -pedantic -std=gnu89 -fno-common
 EXE = fzformat fzputfile fzbuildfull fzlist
 OBJS = fail.o
 PREFIX ?= /usr/local
