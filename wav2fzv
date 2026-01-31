@@ -1,15 +1,36 @@
 #!/bin/sh
 set -e
-if [ $# != 1 ]
-then
-  echo 'Usage: wav2fzv INFILE' 1>&2
+usage() {
+  echo 'Usage: wav2fzv [-r RATE] INFILE' 1>&2
+  echo 'Rate 0: 36kHz (default), 1: 18 kHz, 2: 9kHz' 1>&2
   exit 1
+}
+rate=0
+if [ $# = 3 ] && [ "$1" = -r ]
+then
+  rate=$2
+  case "$rate" in
+  0)
+    soxrate=36k
+    ;;
+  1)
+    soxrate=18k
+    ;;
+  2)
+    soxrate=9k
+    ;;
+  *)
+    usage
+    ;;
+  esac
+  shift 2
 fi
+[ $# = 1 ]  || usage
 tmp=$(mktemp)
 trap "rm -f \"$tmp\"" exit
-sox -G "$1" -t s16 -L "$tmp" rate -v 36000 pad 0 8s
+sox -G "$1" -t s16 -L "$tmp" rate -v "$soxrate" pad 0 8s
 size=$(stat -f%z "$tmp")
-awk -v size="$size" -v name="${1%.*}" '
+awk -v size="$size" -v name="${1%.*}" -v rate="$rate" '
 END {
   samples = size/2
   Long(0) # wave start
@@ -58,7 +79,7 @@ END {
   Short(96) # "high width MIDI code"
   Short(36) # "low"
   Short(72) # "keynote centor"
-  Short(0) # sampling frequency (0: 36k, 1: 18k, 2: 9k)
+  Short(rate) # sampling frequency (0: 36k, 1: 18k, 2: 9k)
   printf("%-12.12s%c%c", name, 0, 0)
   for(i=1;i<=832;i++) printf("%c", 0)
 }
