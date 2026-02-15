@@ -6,29 +6,16 @@ usage() {
   exit 1
 }
 rate=0
-if [ $# = 3 ] && [ "$1" = -r ]
+if [ $# -gt 2 ] && [ x"$1" = x-r ]
 then
   rate=$2
-  case "$rate" in
-  0)
-    soxrate=36k
-    ;;
-  1)
-    soxrate=18k
-    ;;
-  2)
-    soxrate=9k
-    ;;
-  *)
-    usage
-    ;;
-  esac
   shift 2
 fi
+[ "x${rate#[012]}" = x ] || usage
 [ $# = 1 ]  || usage
 tmp=$(mktemp)
 trap "rm -f \"$tmp\"" exit
-sox -G "$1" -t s16 -L "$tmp" rate -v "$soxrate" pad 0 8s
+sox -G "$1" -t s16 -L "$tmp" rate -v $((36000 / (2 ** $rate))) pad 0 8s
 size=$(stat -f%z "$tmp")
 awk -v size="$size" -v name="${1%.*}" -v rate="$rate" '
 END {
