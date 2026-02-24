@@ -104,7 +104,8 @@ int main(int argc, char **argv) {
   }
   if (ferror(file))
     fail("file read error");
-  assert(filename);
+  if (!filename)
+    fail("error reading input file");
   memmove(direntry, filename, 12);
   assert(nbank >= 0 && nbank <= 8);
   putint(nbank, 16, filehead + 1018);
