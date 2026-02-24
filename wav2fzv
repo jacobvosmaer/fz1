@@ -17,7 +17,9 @@ tmp=$(mktemp)
 trap "rm -f \"$tmp\"" exit
 sox -G "$1" -t s16 -L "$tmp" rate -v $((36000 / (2 ** $rate))) pad 0 8s
 size=$(stat -f%z "$tmp")
-awk -v size="$size" -v name="${1%.*}" -v rate="$rate" '
+name="${1%.*}"
+name="${name##*/}"
+awk -v size="$size" -v name="$name" -v rate="$rate" '
 END {
   samples = size/2
   Long(0) # wave start
