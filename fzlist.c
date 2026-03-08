@@ -11,7 +11,6 @@ char *PROGNAME = "fzlist", *types = "FVBESP";
 int u16(uint8_t *p) { return ((int)p[1] << 8) + (int)p[0]; }
 int main(int argc, char **argv) {
   FILE *f;
-  uint8_t *p;
   int n;
   if (argc != 2)
     fail("usage: %s IMAGE\n", PROGNAME);
@@ -20,7 +19,8 @@ int main(int argc, char **argv) {
   if (n = fread(disk, 1, sizeof(disk), f), n != sizeof(disk) - 1)
     fail("invalid image size: %d", n);
   printf("File: %s\nLabel: %12.12s\n", argv[1], disk);
-  for (p = disk + SECTORSIZE; *p && p < disk + 2 * SECTORSIZE; p += 16) {
+  for (uint8_t *p = disk + SECTORSIZE; *p && p < disk + 2 * SECTORSIZE;
+       p += 16) {
     /* An FZ-1 file is a series of ranges of sectors. This allows the FZ-1 to
      * re-use sectors after a file has been deleted. To find out the size of a
      * file we must sum the sizes of the ranges. Variable q points to the first

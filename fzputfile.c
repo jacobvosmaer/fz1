@@ -10,9 +10,8 @@ char *PROGNAME = "fzputfile";
 uint8_t disk[NSECTOR * SECTORSIZE], *CAT = disk + 128, *dir = disk + SECTORSIZE,
                                     *dirend = disk + 2 * SECTORSIZE;
 int putint(int x, int width, uint8_t *p) {
-  int i;
   assert(width > 0 && !(width % 8));
-  for (i = 0; i < width; i += 8)
+  for (int i = 0; i < width; i += 8)
     *p++ = (x >> i);
   return width / 8;
 }
@@ -28,8 +27,7 @@ int newsector(void) {
   return sector;
 }
 int isname(uint8_t *p) {
-  int i;
-  for (i = 0; i < 12; i++)
+  for (int i = 0; i < 12; i++)
     if (p[i] < 0x20 || p[i] > 0x7e)
       return 0;
   return 1;
@@ -85,8 +83,7 @@ int main(int argc, char **argv) {
       if (!nvoice && !nwave && nbank < 8 && isname(p + 0x282)) {
         nbank++;
       } else if (!nwave && nvoice < 64 && !(nvoice % 4) && isname(p + 0xb2)) {
-        int i;
-        for (i = 0; i < 4 && isname(p + i * 256 + 0xb2); i++)
+        for (int i = 0; i < 4 && isname(p + i * 256 + 0xb2); i++)
           nvoice++;
       } else {
         nwave++;
