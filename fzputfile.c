@@ -2,7 +2,6 @@
 #include "fail.h"
 #include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 char *PROGNAME = "fzputfile";
 #define NSECTOR 1280
@@ -44,8 +43,9 @@ int main(int argc, char **argv) {
   }
   if (img = fopen(argv[1], "rb+"), !img)
     fail("open failed: %s", argv[1]);
-  if (filetype = atoi(argv[2]), filetype < 0 || filetype > 1)
-    fail("unsupported file type: %d", filetype);
+  if (strlen(argv[2]) != 1 || argv[2][0] < '0' || argv[2][0] > '1')
+    fail("unsupported file type: %s", argv[2]);
+  filetype = argv[2][0] - '0';
   if (file = fopen(argv[3], "rb"), !file)
     fail("open failed: %s", argv[3]);
   if (!fread(disk, sizeof(disk), 1, img))
