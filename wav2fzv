@@ -6,19 +6,31 @@ usage() {
   exit 1
 }
 rate=0
-if [ $# -gt 2 ] && [ x"$1" = x-r ]
-then
-  rate=$2
-  shift 2
-fi
+while [ $# -gt 2 ]
+do
+  if [ x"$1" = x-r ]
+  then
+    rate=$2
+    shift 2
+  elif [ x"$1" = x-n ]
+  then
+    name=$2
+    shift 2
+  else
+    usage
+  fi
+done
 [ "x${rate#[012]}" = x ] || usage
 [ $# = 1 ]  || usage
 tmp=$(mktemp)
 trap "rm -f \"$tmp\"" exit
 sox -G "$1" -t s16 -L "$tmp" rate -v $((36000 / (2 ** $rate))) pad 0 8s
 size=$(stat -f%z "$tmp")
-name="${1%.*}"
-name="${name##*/}"
+if [ -z "$name" ]
+then
+  name="${1%.*}"
+  name="${name##*/}"
+fi
 awk -v size="$size" -v name="$name" -v rate="$rate" '
 END {
   samples = size/2
