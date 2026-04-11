@@ -26,13 +26,13 @@ int main(int argc, char **argv) {
   fclose(f);
   if (getle(fzv, 4))
     fail("invalid wave start");
-  if (waveend = getle(fzv + 4, 4), (waveend % 2) || waveend >= fzvsize - 1024)
+  if (waveend = getle(fzv + 4, 4), waveend > (fzvsize - 1024) / 2)
     fail("invalid wave end: %d", waveend);
   if (samplerate = fzv[0xb1], samplerate > 2)
     fail("invalid samplerate: %d", samplerate);
   if (f = fopen(argv[2], "wb"), !f)
     failerrno("open %s", argv[2]);
-  if (!writewav(fzv + 1024, waveend / 2, 36000 / (1 << samplerate), f))
+  if (!writewav(fzv + 1024, waveend, 36000 / (1 << samplerate), f))
     failerrno("write %s", argv[2]);
   if (fclose(f))
     failerrno("close %s", argv[2]);
