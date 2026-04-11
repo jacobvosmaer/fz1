@@ -3,8 +3,10 @@
 
 #if __clang__ || __GNUC__
 void fail(char *fmt, ...) __attribute__((format(printf, 1, 2)));
+void failerrno(char *fmt, ...) __attribute__((format(printf, 1, 2)));
 #else
 void fail(char *fmt, ...);
+void failerrno(char *fmt, ...);
 #endif
 
 #define assert(x)                                                              \

@@ -1,10 +1,8 @@
 /* fzv2wav: extract audio from Casio FZ-1 .fzv voice file */
 #include "fail.h"
 #include "wav.h"
-#include <errno.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <string.h>
 uint8_t fzv[2 * 1024 * 1024];
 char *PROGNAME = "fzv2wav";
 uint64_t getle(uint8_t *p, int size) {
@@ -21,7 +19,7 @@ int main(int argc, char **argv) {
     return 1;
   }
   if (f = fopen(argv[1], "rb"), !f)
-    fail("open %s: %s", argv[1], strerror(errno));
+    failerrno("open %s", argv[1]);
   if (fzvsize = fread(fzv, 1, sizeof(fzv), f),
       fzvsize == sizeof(fzv) || fzvsize < 1024)
     fail("invalid FZV file size: %d", fzvsize);
@@ -33,10 +31,10 @@ int main(int argc, char **argv) {
   if (samplerate = fzv[0xb1], samplerate > 2)
     fail("invalid samplerate: %d", samplerate);
   if (f = fopen(argv[2], "wb"), !f)
-    fail("open %s: %s", argv[2], strerror(errno));
+    failerrno("open %s", argv[2]);
   if (!writewav(fzv + 1024, waveend / 2, 36000 / (1 << samplerate), f))
-    fail("write %s: %s", argv[2], strerror(errno));
+    failerrno("write %s", argv[2]);
   if (fclose(f))
-    fail("close %s: %s", argv[2], strerror(errno));
+    fail("close %s", argv[2]);
   return 0;
 }
