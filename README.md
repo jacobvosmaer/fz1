@@ -20,3 +20,7 @@ The tools in this repository help me load files from my computer into the memory
 The FZ-1 has a built-in 3.5" floppy drive. Nowadays it is common to replace the floppy drive with a floppy drive emulator. The emulator stores floppy disk images on a USB stick and the FZ-1 thinks it is reading from real floppies.
 
 I use the tools in this repository to copy audio files from my computer onto a floppy disk image. I then put the USB stick in the floppy emulator and then the FZ-1 can load the files.
+
+## How do I use this
+
+This repository contains C programs and (macOS/Linux) shell scripts. Run `make` to compile the C programs. The shell scripts rely on standard Unix utilities (`awk`, `dd` etc.) and [SoX](https://sourceforge.net/projects/sox/).
