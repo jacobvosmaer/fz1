@@ -1,6 +1,6 @@
 CFLAGS += -Wall -pedantic -std=gnu11 -fno-common
-EXE = fzformat fzputfile fzbuildfull fzlist
-OBJS = fail.o
+EXE = fzformat fzputfile fzbuildfull fzlist fzv2wav
+OBJS = fail.o wav.o
 PREFIX ?= /usr/local
 all: $(EXE)
 dev: CFLAGS += -Werror -g
@@ -9,6 +9,7 @@ fzformat: fail.o
 fzputfile: fail.o
 fzbuildfull: fail.o
 fzlist: fail.o
+fzv2wav: wav.o fail.o
 fail.o: fail.h
 install: all
 	install wav2fzv $(EXE) $(PREFIX)/bin/
