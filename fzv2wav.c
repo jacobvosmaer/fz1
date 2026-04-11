@@ -35,6 +35,6 @@ int main(int argc, char **argv) {
   if (!writewav(fzv + 1024, waveend / 2, 36000 / (1 << samplerate), f))
     failerrno("write %s", argv[2]);
   if (fclose(f))
-    fail("close %s", argv[2]);
+    failerrno("close %s", argv[2]);
   return 0;
 }
