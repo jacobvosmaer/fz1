@@ -6,6 +6,7 @@
 char *PROGNAME = "fzputfile";
 #define NSECTOR 1280
 #define SECTORSIZE 1024
+enum { FULL = 0, VOICE = 1, BANK = 2 };
 uint8_t disk[NSECTOR * SECTORSIZE], *CAT = disk + 128, *dir = disk + SECTORSIZE,
                                     *dirend = disk + 2 * SECTORSIZE;
 int putint(int x, int width, uint8_t *p) {
@@ -26,10 +27,17 @@ int newsector(void) {
   return sector;
 }
 int isname(uint8_t *p) {
-  for (int i = 0; i < 12; i++)
-    if (p[i] < 0x20 || p[i] > 0x7e)
-      return 0;
-  return 1;
+  int nonzero = 0, nonprint = 0;
+  for (int i = 0; i < 12; i++) {
+    nonprint += p[i] < 0x20 || p[i] > 0x7e;
+    nonzero += p[i] > 0;
+  }
+  return !nonzero || !nonprint;
+}
+int isvoice(uint8_t *p) {
+  uint16_t magic = ((uint16_t)p[0x11] << 8) + (uint16_t)p[0x10];
+  return isname(p + 0xb2) && (magic == 0x01d7 || magic == 0x101d ||
+                              magic == 0x2014 || magic == 0x0013);
 }
 int main(int argc, char **argv) {
   FILE *img, *file;
@@ -38,12 +46,14 @@ int main(int argc, char **argv) {
   char *filename = 0;
   if (argc != 4) {
     fprintf(stderr, "Usage: %s IMAGE TYPE FILE\n", PROGNAME);
-    fputs("Supported file types: 0 (Full Dump Data), 1 (Voice Data)\n", stderr);
+    fputs("Supported file types: 0 (Full Dump Data), 1 (Voice Data), 2 (Bank "
+          "Data)\n",
+          stderr);
     return 1;
   }
   if (img = fopen(argv[1], "rb+"), !img)
     fail("open failed: %s", argv[1]);
-  if (strlen(argv[2]) != 1 || argv[2][0] < '0' || argv[2][0] > '1')
+  if (strlen(argv[2]) != 1 || argv[2][0] < '0' || argv[2][0] > '2')
     fail("unsupported file type: %s", argv[2]);
   filetype = argv[2][0] - '0';
   if (file = fopen(argv[3], "rb"), !file)
@@ -75,32 +85,37 @@ int main(int argc, char **argv) {
     p = sectoraddr(sector);
     memmove(p, buf, sizeof(buf));
     switch (filetype) {
-    case 0:
-      filename = "FULL-DATA-FZ";
+    case BANK: /* Use FULL heuristics */
+    case FULL:
       /* Annoyingly, FZF files as found on the internet are missing their
        * bank/voice/wave layout bytes. We use heuristics to guess what they are.
        */
-      if (!nvoice && !nwave && nbank < 8 && isname(p + 0x282)) {
+      if (!filename)
+        filename = filetype == FULL ? "FULL-DATA-FZ" : (char *)p + 0x282;
+      if (!nvoice && !nwave && nbank < (filetype == FULL ? 8 : 1) &&
+          isname(p + 0x282) && !isvoice(p))
         nbank++;
-      } else if (!nwave && nvoice < 64 && !(nvoice % 4) && isname(p + 0xb2)) {
-        for (int i = 0; i < 4 && isname(p + i * 256 + 0xb2); i++)
+      else if (!nwave && nvoice < 64 && !(nvoice % 4) && isvoice(p))
+        for (int i = 0; i < 4 && isvoice(p + i * 256); i++)
           nvoice++;
+      else
+        nwave++;
+      break;
+    case VOICE:
+      if (!filename) { /* First sector of voice file */
+        filename = (char *)p + 0xb2;
+        nbank = 0;
+        nvoice = 1;
       } else {
         nwave++;
       }
-      break;
-    case 1:
-      nbank = 0;
-      nvoice = 1;
-      if (!filename) /* First sector of voice file */
-        filename = (char *)p + 0xb2;
-      else
-        nwave++;
       break;
     }
   }
   if (ferror(file))
     fail("file read error");
+  if (filetype == BANK && nbank != 1)
+    fail("expected 1 bank in FZB file, got %d", nbank);
   if (!filename)
     fail("error reading input file");
   memmove(direntry, filename, 12);
