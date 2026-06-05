@@ -1,5 +1,6 @@
 /* fzputfile: put a file onto a Casio FZ disk image */
 #include "fail.h"
+#include "int.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -9,12 +10,6 @@ char *PROGNAME = "fzputfile";
 enum { FULL = 0, VOICE = 1, BANK = 2 };
 uint8_t disk[NSECTOR * SECTORSIZE], *CAT = disk + 128, *dir = disk + SECTORSIZE,
                                     *dirend = disk + 2 * SECTORSIZE;
-int putint(int x, int width, uint8_t *p) {
-  assert(width > 0 && !(width % 8));
-  for (int i = 0; i < width; i += 8)
-    *p++ = (x >> i);
-  return width / 8;
-}
 uint8_t *sectoraddr(int sector) { return disk + sector * SECTORSIZE; }
 int newsector(void) {
   int sector;
@@ -35,7 +30,7 @@ int isname(uint8_t *p) {
   return !nonzero || !nonprint;
 }
 int isvoice(uint8_t *p) {
-  uint16_t magic = ((uint16_t)p[0x11] << 8) + (uint16_t)p[0x10];
+  uint16_t magic = get16(p + 0x10);
   return isname(p + 0xb2) && (magic == 0x01d7 || magic == 0x101d ||
                               magic == 0x2014 || magic == 0x0013);
 }
@@ -65,13 +60,13 @@ int main(int argc, char **argv) {
   if (direntry == dirend)
     fail("directory table full");
   sector = newsector();
-  putint(filetype, 16, direntry + 12);
-  putint(sector, 16, direntry + 14);
+  put16(direntry + 12, filetype);
+  put16(direntry + 14, sector);
   filehead = sectoraddr(sector);
   memset(filehead, 0, SECTORSIZE);
   dbp = filehead;
-  putint(sector, 16, dbp);
-  putint(sector, 16, dbp + 2);
+  put16(dbp, sector);
+  put16(dbp + 2, sector);
   while (fread(buf, 1, sizeof(buf), file)) {
     uint8_t *p;
     int nextsector = newsector();
@@ -79,10 +74,10 @@ int main(int argc, char **argv) {
       if (dbp - filehead == 256)
         fail("too many data block pointers");
       dbp += 4;
-      putint(nextsector, 16, dbp);
+      put16(dbp, nextsector);
     }
     sector = nextsector;
-    putint(sector, 16, dbp + 2);
+    put16(dbp + 2, sector);
     p = sectoraddr(sector);
     memmove(p, buf, sizeof(buf));
     switch (filetype) {
@@ -121,11 +116,11 @@ int main(int argc, char **argv) {
     fail("error reading input file");
   memmove(direntry, filename, 12);
   assert(nbank >= 0 && nbank <= 8);
-  putint(nbank, 16, filehead + 1018);
+  put16(filehead + 1018, nbank);
   assert(nvoice >= 0 && nvoice <= 64);
-  putint(nvoice, 16, filehead + 1020);
+  put16(filehead + 1020, nvoice);
   assert(nwave >= 0 && nwave < NSECTOR);
-  putint(nwave, 16, filehead + 1022);
+  put16(filehead + 1022, nwave);
   if (fseek(img, 0, SEEK_SET))
     fail("fseek image failed");
   if (!fwrite(disk, sizeof(disk), 1, img))

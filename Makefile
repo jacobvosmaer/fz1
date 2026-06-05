@@ -6,7 +6,7 @@ all: $(EXE)
 dev: CFLAGS += -Werror -g
 dev: all
 fzformat: fail.o
-fzputfile: fail.o
+fzputfile: fail.o int.o
 fzbuildfull: fail.o int.o
 fzlist: fail.o int.o
 fzv2wav: wav.o fail.o
