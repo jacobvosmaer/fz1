@@ -71,6 +71,7 @@ int main(int argc, char **argv) {
   memset(filehead, 0, SECTORSIZE);
   dbp = filehead;
   putint(sector, 16, dbp);
+  putint(sector, 16, dbp + 2);
   while (fread(buf, 1, sizeof(buf), file)) {
     uint8_t *p;
     int nextsector = newsector();
