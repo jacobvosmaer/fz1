@@ -7,7 +7,7 @@ dev: CFLAGS += -Werror -g
 dev: all
 fzformat: fail.o
 fzputfile: fail.o
-fzbuildfull: fail.o
+fzbuildfull: fail.o int.o
 fzlist: fail.o
 fzv2wav: wav.o fail.o
 fail.o: fail.h
