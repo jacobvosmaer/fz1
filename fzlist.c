@@ -1,12 +1,12 @@
 /* fzlist: print FZ-1 floppy image contents */
 #include "fail.h"
+#include "int.h"
 #include <stdint.h>
 #include <stdio.h>
 #define NSECTOR 1280
 #define SECTORSIZE 1024
 uint8_t disk[NSECTOR * SECTORSIZE + 1], *diskend = disk + sizeof(disk) - 1;
 char *PROGNAME = "fzlist", *types = "FVBESP";
-int u16(uint8_t *p) { return ((int)p[1] << 8) + (int)p[0]; }
 int main(int argc, char **argv) {
   FILE *f;
   int n;
@@ -23,13 +23,13 @@ int main(int argc, char **argv) {
      * re-use sectors after a file has been deleted. To find out the size of a
      * file we must sum the sizes of the ranges. Variable q points to the first
      * range in the extent table of the current file. */
-    uint8_t *q = disk + SECTORSIZE * u16(p + 14), *qend = q + SECTORSIZE,
+    uint8_t *q = disk + SECTORSIZE * get16(p + 14), *qend = q + SECTORSIZE,
             filetype = p[12];
     if (!(q < diskend && qend <= diskend))
       fail("invalid file head address at offset %ld", p - disk);
     n = 0;
-    for (; u16(q) && q < qend; q += 4)
-      n += u16(q + 2) - u16(q) + 1;
+    for (; get16(q) && q < qend; q += 4)
+      n += get16(q + 2) - get16(q) + 1;
     if (filetype > 5)
       fail("invalid filetype at offset %ld", p - disk);
     printf("%c  %9d  %12.12s\n", types[filetype], n * SECTORSIZE, p);
