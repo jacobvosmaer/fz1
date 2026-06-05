@@ -21,23 +21,28 @@ int newsector(void) {
   CAT[sector / 8] |= 1 << (sector % 8);
   return sector;
 }
-int isname(uint8_t *p) {
-  int nonzero = 0, nonprint = 0;
-  for (int i = 0; i < 12; i++) {
-    nonprint += p[i] < 0x20 || p[i] > 0x7e;
-    nonzero += p[i] > 0;
+int maxbankvoice(uint8_t *p) {
+  int max = -1;
+  if (*p >= 64)
+    fail("error: bank has %d areas", *p);
+  for (int i = 0; i < *p; i++) {
+    int voicep = get16(p + 0x202 + 2 * i);
+    /* An empty voice gets stored as voicep 0x8000 so we ignore voicep
+     * values >= 64. */
+    if (voicep < 64 && voicep > max)
+      max = voicep;
   }
-  return !nonzero || !nonprint;
+  return max;
 }
 int isvoice(uint8_t *p) {
   uint16_t magic = get16(p + 0x10);
-  return isname(p + 0xb2) && (magic == 0x01d7 || magic == 0x101d ||
-                              magic == 0x2014 || magic == 0x0013);
+  return get32(p) <= get32(p + 4) && (magic == 0x01d7 || magic == 0x101d ||
+                                      magic == 0x2014 || magic == 0x0013);
 }
 int main(int argc, char **argv) {
   FILE *img, *file;
   uint8_t *direntry, *filehead, *dbp, buf[SECTORSIZE] = {0};
-  int filetype, sector, nbank = 0, nvoice = 0, nwave = 0;
+  int filetype, sector, nbank = 0, nvoice = 0, ivoice = 0, nwave = 0;
   char *filename = 0;
   if (argc != 4) {
     fprintf(stderr, "Usage: %s IMAGE TYPE FILE\n", PROGNAME);
@@ -81,28 +86,57 @@ int main(int argc, char **argv) {
     p = sectoraddr(sector);
     memmove(p, buf, sizeof(buf));
     switch (filetype) {
-    case BANK: /* Use FULL heuristics */
     case FULL:
-      /* Annoyingly, FZF files as found on the internet are missing their
-       * bank/voice/wave layout bytes. We use heuristics to guess what they are.
+      filename = "FULL-DATA-FZ";
+      /* FZF files as found on the internet are missing their bank/voice/wave
+       * layout bytes. We use heuristics to guess what they are.
+       *
+       * We expect 0-8 banks, followed by 0-64 voices, and everything else that
+       * follows is wave data.
+       *
+       * The first byte in a bank is the number of areas in the bank. The SAVE
+       * FULL function omits banks with 0 areas so if the first byte of the
+       * current sector is 0, it cannot be a bank. Conversely, the first voice
+       * will have its sample data start at sample address 0 so the moment we
+       * are out of banks we will see a 0 at *p.
        */
-      if (!filename)
-        filename = filetype == FULL ? "FULL-DATA-FZ" : (char *)p + 0x282;
-      if (!nvoice && !nwave && nbank < (filetype == FULL ? 8 : 1) &&
-          isname(p + 0x282) && !isvoice(p))
+      if (!ivoice && !nwave && *p) { /* bank sector */
+        int maxvoice = maxbankvoice(p);
+        if (maxvoice + 1 > nvoice)
+          nvoice = maxvoice + 1;
         nbank++;
-      else if (!nwave && nvoice < 64 && !(nvoice % 4) && isvoice(p))
-        for (int i = 0; i < 4 && isvoice(p + i * 256); i++)
+      } else if (nbank && ivoice < nvoice) { /* voice sector */
+        ivoice += 4;
+      } else if (!nwave && !nbank && !(nvoice % 4) && isvoice(p)) {
+        /* This is a full dump without banks to derive the number of voices
+         * from. Fall back to guessing if we are looking at voice parameters. */
+        for (uint8_t *q = p; q < p + SECTORSIZE && isvoice(q); q += 256)
           nvoice++;
-      else
+      } else { /* wave sector */
         nwave++;
+      }
       break;
     case VOICE:
-      if (!filename) { /* First sector of voice file */
+      if (!filename) { /* voice sector */
         filename = (char *)p + 0xb2;
         nbank = 0;
         nvoice = 1;
-      } else {
+      } else { /* wave sector */
+        nwave++;
+      }
+      break;
+    case BANK:
+      if (!filename) { /* bank sector */
+        filename = (char *)p + 0x282;
+        nbank = 1;
+        /* Regardless of the voice numbers the users uses when
+         * creating the bank, the FZ renumbers the voices while saving so that
+         * they start from voicep 0. Therefore the largest voicep number we
+         * find tells us how many voices there are. */
+        nvoice = maxbankvoice(p) + 1;
+      } else if (ivoice < nvoice) { /* voice sector */
+        ivoice += 4;
+      } else { /* wave sector */
         nwave++;
       }
       break;
@@ -110,9 +144,7 @@ int main(int argc, char **argv) {
   }
   if (ferror(file))
     fail("file read error");
-  if (filetype == BANK && nbank != 1)
-    fail("expected 1 bank in FZB file, got %d", nbank);
-  if (!filename)
+  if (!filename) /* TODO blank name? */
     fail("error reading input file");
   memmove(direntry, filename, 12);
   assert(nbank >= 0 && nbank <= 8);
