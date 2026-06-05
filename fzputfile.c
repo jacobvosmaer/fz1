@@ -144,8 +144,10 @@ int main(int argc, char **argv) {
   }
   if (ferror(file))
     fail("file read error");
-  if (!filename) /* TODO blank name? */
+  if (!filename)
     fail("error reading input file");
+  if (!*filename)
+    filename = "???         ";
   memmove(direntry, filename, 12);
   assert(nbank >= 0 && nbank <= 8);
   put16(filehead + 1018, nbank);
