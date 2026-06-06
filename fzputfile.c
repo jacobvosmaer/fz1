@@ -75,51 +75,27 @@ int main(int argc, char **argv) {
     put16(dbp + 2, sector);
     p = sectoraddr(sector);
     memmove(p, buf, sizeof(buf));
-    switch (filetype) {
-    case FULL:
-      filename = "FULL-DATA-FZ";
-      /* FZF files as found on the internet are missing their bank/voice/wave
-       * layout bytes. We use heuristics to guess what they are.
-       *
-       * We expect 0-8 banks, followed by 0-64 voices, and everything else that
-       * follows is wave data.
-       *
-       * The first byte in a bank is the number of areas in the bank. The SAVE
-       * FULL function omits banks with 0 areas so if the first byte of the
-       * current sector is 0, it cannot be a bank. Conversely, the first voice
-       * will have its sample data start at sample address 0 so the moment we
-       * are out of banks we will see a 0 at *p.
-       */
-      if (!nvoice && !nwave && nbank < 8 && *p) { /* bank sector */
-        nbank++;
-      } else if (!nwave && !(nvoice % 4) && nvoice < 64 &&
-                 isvoice(p)) { /* voice sector */
-        for (uint8_t *q = p; q < p + SECTORSIZE && isvoice(q); q += 256)
-          nvoice++;
-      } else { /* wave sector */
-        nwave++;
-      }
-      break;
-    case VOICE:
-      if (!filename) { /* voice sector */
+    if (!filename) { /* first sector */
+      if (filetype == FULL) {
+        filename = "FULL-DATA-FZ";
+        nbank = *p > 0;
+      } else if (filetype == VOICE) {
         filename = (char *)p + 0xb2;
-        nbank = 0;
         nvoice = 1;
-      } else { /* wave sector */
-        nwave++;
-      }
-      break;
-    case BANK:
-      if (!filename) { /* bank sector */
+      } else if (filetype == BANK) {
         filename = (char *)p + 0x282;
         nbank = 1;
-      } else if (!nwave && !(nvoice % 4) && nvoice < 64 && isvoice(p)) {
+      }
+    } else { /* second or higher sector */
+      if (filetype == FULL && !nvoice && nbank < 8 && *p) {
+        nbank++;
+      } else if ((filetype == FULL || filetype == BANK) && !nwave &&
+                 !(nvoice % 4) && nvoice < 64 && isvoice(p)) {
         for (uint8_t *q = p; q < p + SECTORSIZE && isvoice(q); q += 256)
           nvoice++;
-      } else { /* wave sector */
+      } else {
         nwave++;
       }
-      break;
     }
   }
   if (ferror(file))
