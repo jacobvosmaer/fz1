@@ -12,6 +12,8 @@ fzlist: fail.o int.o fz.o
 fzv2wav: wav.o fail.o int.o
 fail.o: fail.h
 wav.o: wav.h
+int.o: int.h
+fz.o: fz.h
 install: all
 	install wav2fzv $(EXE) $(PREFIX)/bin/
 clean:
