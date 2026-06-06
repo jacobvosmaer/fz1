@@ -6,6 +6,7 @@
 - `fzbuildfull`: assemble FZV voice files into an FZF full data dump
 - `wav2fzv`: convert a WAV file to an FZV
 - `fzv2wav`: convert an FZV file to WAV
+- `fzlist`: list contents of FZ-1 disk image file
 
 Read more in this blog post: https://blog.jacobvosmaer.nl/0057-fz-1-images/ .
 
