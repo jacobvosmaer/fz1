@@ -1,5 +1,6 @@
 /* fzputfile: put a file onto a Casio FZ disk image */
 #include "fail.h"
+#include "fz.h"
 #include "int.h"
 #include <stdint.h>
 #include <stdio.h>
@@ -20,14 +21,6 @@ int newsector(void) {
     fail("no space left on disk");
   CAT[sector / 8] |= 1 << (sector % 8);
   return sector;
-}
-/* isvoice guesses if p points to a non-empty voice */
-int isvoice(uint8_t *p) {
-  uint16_t loop = get16(p + 0x10);
-  uint32_t wavst = get32(p), waved = get32(p + 4), genst = get32(p + 8),
-           gened = get32(p + 12);
-  return wavst <= genst && genst <= gened && gened <= waved &&
-         (loop == 0x01d7 || loop == 0x101d || loop == 0x2014 || loop == 0x0013);
 }
 int main(int argc, char **argv) {
   FILE *img, *file;
@@ -80,7 +73,7 @@ int main(int argc, char **argv) {
         filename = "FULL-DATA-FZ";
         nbank = *p > 0; /* banks in a full dump are never empty */
       } else if (filetype == VOICE) {
-        filename = (char *)p + 0xb2;
+        filename = voicename(p);
         nvoice = 1;
       } else if (filetype == BANK) {
         filename = (char *)p + 0x282;
