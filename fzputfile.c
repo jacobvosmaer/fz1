@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
         filename = voicename(p);
         nvoice = 1;
       } else if (filetype == BANK) {
-        filename = (char *)p + 0x282;
+        filename = bankname(p);
         nbank = 1;
       }
     } else { /* second or higher sector */

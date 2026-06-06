@@ -8,7 +8,7 @@ dev: all
 fzformat: fail.o
 fzputfile: fail.o int.o fz.o
 fzbuildfull: fail.o int.o
-fzlist: fail.o int.o
+fzlist: fail.o int.o fz.o
 fzv2wav: wav.o fail.o int.o
 fail.o: fail.h
 wav.o: wav.h
