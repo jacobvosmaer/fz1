@@ -21,13 +21,13 @@ int newsector(void) {
   CAT[sector / 8] |= 1 << (sector % 8);
   return sector;
 }
+/* isvoice guesses if p points to a non-empty voice */
 int isvoice(uint8_t *p) {
-  uint16_t magic = get16(p + 0x10);
+  uint16_t loop = get16(p + 0x10);
   uint32_t wavst = get32(p), waved = get32(p + 4), genst = get32(p + 8),
            gened = get32(p + 12);
   return wavst <= genst && genst <= gened && gened <= waved &&
-         (magic == 0x01d7 || magic == 0x101d || magic == 0x2014 ||
-          magic == 0x0013);
+         (loop == 0x01d7 || loop == 0x101d || loop == 0x2014 || loop == 0x0013);
 }
 int main(int argc, char **argv) {
   FILE *img, *file;
@@ -78,7 +78,7 @@ int main(int argc, char **argv) {
     if (!filename) { /* first sector */
       if (filetype == FULL) {
         filename = "FULL-DATA-FZ";
-        nbank = *p > 0;
+        nbank = *p > 0; /* banks in a full dump are never empty */
       } else if (filetype == VOICE) {
         filename = (char *)p + 0xb2;
         nvoice = 1;
@@ -88,6 +88,8 @@ int main(int argc, char **argv) {
       }
     } else { /* second or higher sector */
       if (filetype == FULL && !nvoice && nbank < 8 && *p) {
+        /* the first voice has wave start address 0, so when we get to that
+         * sector, *p == 0 and we move on to counting voices below */
         nbank++;
       } else if ((filetype == FULL || filetype == BANK) && !nwave &&
                  !(nvoice % 4) && nvoice < 64 && isvoice(p)) {
