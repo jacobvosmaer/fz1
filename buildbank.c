@@ -35,7 +35,7 @@ uint8_t *buildbank(uint8_t *bank, uint8_t *bankend, char *name, char **files,
     bank[0x182 + i] = 0xff;         /* audio outputs */
     put16(bank + 0x202 + 2 * i, i); /* voice number */
   }
-  sprintf((char *)bank + 0x282, "-12.12%s", name);
+  sprintf((char *)bank + 0x282, "%-12.12s", name);
   for (int i = 0; i < nfiles; i++) {
     uint8_t buf[1024] = {0};
     FILE *f = fopen(files[i], "rb");
