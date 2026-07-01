@@ -1,16 +1,24 @@
 #!/bin/sh
 set -e
 usage() {
-  echo 'Usage: wav2fzv [-r RATE] WAVFILE FZVFILE' 1>&2
+  echo 'Usage: wav2fzv [-r RATE] [-x CROSSFADE] WAVFILE FZVFILE' 1>&2
   echo 'Rate 0: 36kHz (default), 1: 18 kHz, 2: 9kHz' 1>&2
   exit 1
 }
 rate=0
-if [ $# -gt 3 ] && [ x"$1" = x-r ]
-then
-  rate=$2
+while [ $# -gt 3 ]
+do
+  if [ x"$1" = x-r ]
+  then
+    rate=$2
+  elif [ x"$1" = x-x ]
+  then
+    crossfade=$2
+  else
+    usage
+  fi
   shift 2
-fi
+done
 [ "x${rate#[012]}" = x ] || usage
 [ $# = 2 ]  || usage
 outdir=.
@@ -25,7 +33,7 @@ size=$(stat -f%z "$raw")
 name="${2%.*}"
 name="${name##*/}"
 {
-  awk -v size="$size" -v name="$name" -v rate="$rate" '
+  awk -v size="$size" -v name="$name" -v rate="$rate" -v crossfade="$crossfade" '
   END {
     samples = size/2
     Long(0) # wave start
@@ -37,7 +45,7 @@ name="${name##*/}"
     Short(0) # loop end
     for(i=1;i<=8;i++) Long(samples-8) # loop start
     for(i=1;i<=8;i++) Long(samples-8) # loop end
-    for(i=1;i<=8;i++) Int(0) # loop crossfade
+    for(i=1;i<=8;i++) Int(0+crossfade) # loop crossfade
     for(i=1;i<=8;i++) Int(100) # loop time
     Int(0) # dcp
     Short(0) # dcf
