@@ -88,7 +88,7 @@ name="${name##*/}"
   }
   function Long(x) { Int(x); Int(x/65536) }
   function Int(x) { Short(x); Short(x/256) }
-  function Short(x) { printf "%c", int(x) }
+  function Short(x) { printf "%c", int(x)%256 }
   ' /dev/null
   cat "$raw"
   pad=$((1024 - ($size % 1024)))
